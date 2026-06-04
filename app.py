@@ -1,76 +1,314 @@
 import streamlit as st
 import google.genai as genai
 import os
+import json
+from datetime import datetime
 
-# Configuração da página do site
-st.set_page_config(page_title="Chat com a Bolha 🫧", page_icon="🫧", layout="centered")
+# ====================================
+# CONFIGURAÇÃO DA PÁGINA
+# ====================================
 
-# Estilização CSS para deixar o visual mais colorido e fofo
+st.set_page_config(
+    page_title="Chat com a Bolha 🫧",
+    page_icon="🫧",
+    layout="centered"
+)
+
 st.markdown("""
-    <style>
-    .stApp { background-color: #fff0f5; }
-    h1, h2, h3 { color: #ff3399 !important; font-family: 'sans-serif'; }
-    .stChatMessage { border-radius: 15px; padding: 10px; margin: 5px 0; }
-    </style>
+<style>
+.stApp {
+    background-color: #fff0f5;
+}
+
+h1, h2, h3 {
+    color: #ff3399 !important;
+}
+
+.stChatMessage {
+    border-radius: 15px;
+    padding: 10px;
+    margin: 5px 0;
+}
+</style>
 """, unsafe_allow_html=True)
 
 st.title("🫧 Conversando com a Bolha!")
 st.subheader("Sua inteligência artificial descontraída e bem-humorada 😉")
 
-# Busca a chave de API salva no seu Windows
+# ====================================
+# PASTA DE CONVERSAS
+# ====================================
+
+PASTA_CONVERSAS = "conversas"
+
+if not os.path.exists(PASTA_CONVERSAS):
+    os.makedirs(PASTA_CONVERSAS)
+
+# ====================================
+# API KEY
+# ====================================
+
 API_KEY = os.environ.get("GEMINI_API_KEY")
 
 if not API_KEY:
-    st.error("⚠️ Configuração necessária: A chave GEMINI_API_KEY não foi encontrada no sistema.")
+    st.error(
+        "⚠️ A variável GEMINI_API_KEY não foi encontrada."
+    )
     st.stop()
 
-# Definição da alma e da personalidade da Bolha
-personalidade = (
-    "Seu nome é Bolha. Você é uma inteligência artificial com uma personalidade feminina, "
-    "extremamente brincalhona, bem-humorada, descontraída e alto-astral. "
-    "Fale de igual para igual, use gírias leves, expressões divertidas e emojis. "
-    "Não responda com listas formais ou textos longos e chatos. Seja expressiva, "
-    "faça piadas saudáveis e demonstre muito carinho e entusiasmo ao conversar!"
-)
+# ====================================
+# PERSONALIDADE DA BOLHA
+# ====================================
 
-# =====================================================================
-# SOLUÇÃO DO ERRO: Salvando o cliente e o chat na memória estável do Streamlit
-# =====================================================================
+personalidade = """
+Seu nome é Bolha.
+
+Você é uma inteligência artificial feminina,
+divertida, engraçada, simpática e muito amigável.
+
+Use emojis naturalmente.
+Fale de forma descontraída.
+Evite respostas excessivamente formais.
+"""
+
+# ====================================
+# INICIALIZAÇÃO
+# ====================================
+
 if "cliente" not in st.session_state:
-    # Cria o cliente uma única vez e guarda na memória
-    st.session_state.cliente = genai.Client(api_key=API_KEY)
-    
-    # Cria o chat vinculado a esse cliente guardado
-    st.session_state.chat = st.session_state.cliente.chats.create(
-        model = "gemini-2.5-flash",
-        config=genai.types.GenerateContentConfig(
-            system_instruction=personalidade,
-            temperature=0.85
+
+    st.session_state.cliente = genai.Client(
+        api_key=API_KEY
+    )
+
+    st.session_state.chat = (
+        st.session_state.cliente.chats.create(
+            model="gemini-2.5-flash",
+            config=genai.types.GenerateContentConfig(
+                system_instruction=personalidade,
+                temperature=0.85
+            )
         )
     )
 
 if "historico" not in st.session_state:
     st.session_state.historico = []
 
-# Mostrar histórico de mensagens na tela
+# ====================================
+# FUNÇÕES
+# ====================================
+
+def gerar_titulo():
+    if len(st.session_state.historico) == 0:
+        return "Conversa_Vazia"
+
+    primeira = st.session_state.historico[0]["texto"]
+
+    titulo = primeira[:30]
+    titulo = titulo.replace("/", "-")
+    titulo = titulo.replace("\\", "-")
+    titulo = titulo.replace(":", "-")
+
+    return titulo
+
+
+def salvar_conversa():
+
+    titulo = gerar_titulo()
+
+    data = datetime.now().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+
+    nome = f"{data}_{titulo}.json"
+
+    caminho = os.path.join(
+        PASTA_CONVERSAS,
+        nome
+    )
+
+    with open(
+        caminho,
+        "w",
+        encoding="utf-8"
+    ) as arquivo:
+
+        json.dump(
+            st.session_state.historico,
+            arquivo,
+            ensure_ascii=False,
+            indent=4
+        )
+
+    return nome
+
+
+def carregar_conversa(nome_arquivo):
+
+    caminho = os.path.join(
+        PASTA_CONVERSAS,
+        nome_arquivo
+    )
+
+    with open(
+        caminho,
+        "r",
+        encoding="utf-8"
+    ) as arquivo:
+
+        st.session_state.historico = json.load(
+            arquivo
+        )
+
+
+def excluir_conversa(nome_arquivo):
+
+    caminho = os.path.join(
+        PASTA_CONVERSAS,
+        nome_arquivo
+    )
+
+    if os.path.exists(caminho):
+        os.remove(caminho)
+
+
+# ====================================
+# SIDEBAR
+# ====================================
+
+with st.sidebar:
+
+    st.header("📁 Conversas")
+
+    if st.button("💾 Salvar conversa"):
+
+        nome = salvar_conversa()
+
+        st.success(
+            f"Conversa salva!\n{nome}"
+        )
+
+    arquivos = sorted(
+        os.listdir(PASTA_CONVERSAS),
+        reverse=True
+    )
+
+    arquivos_json = [
+        a for a in arquivos
+        if a.endswith(".json")
+    ]
+
+    if arquivos_json:
+
+        conversa = st.selectbox(
+            "📜 Conversas salvas",
+            arquivos_json
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            if st.button("📂 Carregar"):
+
+                carregar_conversa(conversa)
+
+                st.success(
+                    "Conversa carregada!"
+                )
+
+                st.rerun()
+
+        with col2:
+
+            if st.button("🗑️ Excluir"):
+
+                excluir_conversa(conversa)
+
+                st.success(
+                    "Conversa excluída!"
+                )
+
+                st.rerun()
+
+    st.divider()
+
+    if st.button("✨ Nova conversa"):
+
+        st.session_state.historico = []
+
+        st.session_state.chat = (
+            st.session_state.cliente.chats.create(
+                model="gemini-2.5-flash",
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=personalidade,
+                    temperature=0.85
+                )
+            )
+        )
+
+        st.rerun()
+
+# ====================================
+# MOSTRAR HISTÓRICO
+# ====================================
+
 for mensagem in st.session_state.historico:
-    with st.chat_message(mensagem["autor"], avatar=mensagem["avatar"]):
+
+    with st.chat_message(
+        mensagem["autor"],
+        avatar=mensagem["avatar"]
+    ):
+
         st.write(mensagem["texto"])
 
-# Campo de texto estilo ChatGPT para enviar mensagens
-if texto_usuario := st.chat_input("Diga um oi para a Bolha..."):
-    # 1. Mostra a mensagem que você acabou de digitar
-    with st.chat_message("user", avatar="👤"):
+# ====================================
+# CHAT
+# ====================================
+
+if texto_usuario := st.chat_input(
+    "Diga um oi para a Bolha..."
+):
+
+    with st.chat_message(
+        "user",
+        avatar="👤"
+    ):
+
         st.write(texto_usuario)
-    st.session_state.historico.append({"autor": "user", "texto": texto_usuario, "avatar": "👤"})
-    
-    # 2. Faz a Bolha pensar e responder usando a conexão segura da memória
-    with st.chat_message("assistant", avatar="🫧"):
-        with st.spinner("Bolha está digitando... 💭"):
+
+    st.session_state.historico.append({
+        "autor": "user",
+        "texto": texto_usuario,
+        "avatar": "👤"
+    })
+
+    with st.chat_message(
+        "assistant",
+        avatar="🫧"
+    ):
+
+        with st.spinner(
+            "Bolha está digitando... 💭"
+        ):
+
             try:
-                resposta = st.session_state.chat.send_message(texto_usuario)
+
+                resposta = (
+                    st.session_state.chat
+                    .send_message(texto_usuario)
+                )
+
                 st.write(resposta.text)
-                # Salva a resposta dela no histórico
-                st.session_state.historico.append({"autor": "assistant", "texto": resposta.text, "avatar": "🫧"})
+
+                st.session_state.historico.append({
+                    "autor": "assistant",
+                    "texto": resposta.text,
+                    "avatar": "🫧"
+                })
+
             except Exception as e:
-                st.error(f"Ih, deu um errinho interno aqui! 🤭 Erro: {e}")
+
+                st.error(
+                    f"Erro: {e}"
+                )
