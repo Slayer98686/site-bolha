@@ -42,8 +42,7 @@ if "cliente" not in st.session_state:
     
     # Cria o chat vinculado a esse cliente guardado
     st.session_state.chat = st.session_state.cliente.chats.create(
-        model="gemini-2.5-flash",
-
+        model = "gemini-2.5-flash",
         config=genai.types.GenerateContentConfig(
             system_instruction=personalidade,
             temperature=0.85
