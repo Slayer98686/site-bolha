@@ -14,11 +14,35 @@ st.set_page_config(
     layout="centered"
 )
 
-st.markdown("""
+if st.session_state.get("tema", "Claro") == "Claro":
+    fundo = "#fff0f5"
+    texto = "#000000"
+    titulo = "#ff3399"
+else:
+    fundo = "#121212"
+    texto = "#ffffff"
+    titulo = "#ff66cc"
+
+st.markdown(f"""
 <style>
-.stApp {
-    background-color: #fff0f5;
-}
+
+.stApp {{
+    background-color: {fundo};
+    color: {texto};
+}}
+
+h1, h2, h3 {{
+    color: {titulo} !important;
+}}
+
+.stChatMessage {{
+    border-radius:15px;
+    padding:10px;
+    margin:5px 0;
+}}
+
+</style>
+""", unsafe_allow_html=True)
 
 h1, h2, h3 {
     color: #ff3399 !important;
@@ -33,6 +57,11 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 st.title("🫧 Conversando com a Bolha!")
+st.image(
+    "https://cdn-icons-png.flaticon.com/512/4140/4140048.png",
+    width=100
+)
+
 st.subheader("Sua inteligência artificial descontraída e bem-humorada 😉")
 
 # ====================================
@@ -93,6 +122,12 @@ if "cliente" not in st.session_state:
 
 if "historico" not in st.session_state:
     st.session_state.historico = []
+    
+    if "tema" not in st.session_state:
+    st.session_state.tema = "Claro"
+
+if "contador_mensagens" not in st.session_state:
+    st.session_state.contador_mensagens = 0
 
 # ====================================
 # FUNÇÕES
@@ -288,8 +323,11 @@ if texto_usuario := st.chat_input(
         avatar="🫧"
     ):
 
-        with st.spinner(
-            "Bolha está digitando... 💭"
+    placeholder = st.empty()
+
+placeholder.info(
+    "🫧 Bolha está pensando em algo divertido..."
+)
         ):
 
             try:
@@ -300,6 +338,12 @@ if texto_usuario := st.chat_input(
                 )
 
                 st.write(resposta.text)
+                
+                placeholder = st.empty()
+
+placeholder.info(
+    "🫧 Bolha está pensando em algo divertido..."
+)
 
                 st.session_state.historico.append({
                     "autor": "assistant",
