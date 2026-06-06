@@ -3,6 +3,7 @@ import google.genai as genai
 import os
 import json
 from datetime import datetime
+import time
 
 # ====================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -270,19 +271,14 @@ if texto_usuario := st.chat_input(
     "Diga um oi para a Bolha..."
 ):
 
+    # Mostra a mensagem do usuário na tela imediatamente
     with st.chat_message(
         "user",
         avatar="👤"
     ):
-
         st.write(texto_usuario)
 
-    st.session_state.historico.append({
-        "autor": "user",
-        "texto": texto_usuario,
-        "avatar": "👤"
-    })
-
+    # Cria o espaço do assistente e roda o mecanismo de proteção contra erro 503
     with st.chat_message(
         "assistant",
         avatar="🫧"
@@ -292,23 +288,42 @@ if texto_usuario := st.chat_input(
             "Bolha está digitando... 💭"
         ):
 
-            try:
+            tentativas = 3
+            sucesso = False
 
-                resposta = (
-                    st.session_state.chat
-                    .send_message(texto_usuario)
-                )
+            for i in range(tentativas):
+                try:
+                    resposta = (
+                        st.session_state.chat
+                        .send_message(texto_usuario)
+                    )
+                    
+                    st.write(resposta.text)
 
-                st.write(resposta.text)
-
-                st.session_state.historico.append({
-                    "autor": "assistant",
-                    "texto": resposta.text,
-                    "avatar": "🫧"
-                })
-
-            except Exception as e:
-
-                st.error(
-                    f"Erro: {e}"
-                )
+                    # Se a API respondeu certo, salvamos o bloco completo no histórico
+                    st.session_state.historico.append({
+                        "autor": "user",
+                        "texto": texto_usuario,
+                        "avatar": "👤"
+                    })
+                    
+                    st.session_state.historico.append({
+                        "autor": "assistant",
+                        "texto": resposta.text,
+                        "avatar": "🫧"
+                    })
+                    
+                    sucesso = True
+                    break  # Mensagem enviada com sucesso, encerra o loop de tentativas
+                    
+                except Exception as e:
+                    # Se for erro de indisponibilidade (503) e ainda houver tentativas restantes
+                    if "503" in str(e) and i < tentativas - 1:
+                        time.sleep(2)  # Aguarda 2 segundos antes de tentar novamente
+                        continue
+                    else:
+                        st.error(
+                            "Opa! Os servidores do Gemini estão bem instáveis agora. 😭 "
+                            "Tente enviar sua mensagem novamente em alguns segundos!"
+                        )
+                        print(f"Erro original: {e}")
