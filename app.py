@@ -284,37 +284,40 @@ if texto_usuario := st.chat_input(
         avatar="🫧"
     ):
 
-        with st.spinner(
-            "Bolha está digitando... 💭"
-        ):
+       with st.spinner(
+    "Bolha está digitando... 💭"
+):
 
-            tentativas = 3
-            sucesso = False
+    tentativas = 3
+    sucesso = False
 
-        for i in range(tentativas):
-    try:
-        resposta = (
-            st.session_state.chat
-            .send_message(texto_usuario)
-        )
+    for i in range(tentativas):
 
-        st.write(resposta.text)
+        try:
 
-        st.session_state.historico.append({
-            "autor": "user",
-            "texto": texto_usuario,
-            "avatar": "👤"
-        })
+            resposta = (
+                st.session_state.chat
+                .send_message(texto_usuario)
+            )
 
-        st.session_state.historico.append({
-            "autor": "assistant",
-            "texto": resposta.text,
-            "avatar": "🫧"
-        })
+            st.write(resposta.text)
 
-        sucesso = True
-        break
+            st.session_state.historico.append({
+                "autor": "user",
+                "texto": texto_usuario,
+                "avatar": "👤"
+            })
 
-    except Exception as e:
-        st.error(f"Erro real: {repr(e)}")
-        print(f"Erro original: {repr(e)}")
+            st.session_state.historico.append({
+                "autor": "assistant",
+                "texto": resposta.text,
+                "avatar": "🫧"
+            })
+
+            sucesso = True
+            break
+
+        except Exception as e:
+
+            st.error(f"Erro real: {repr(e)}")
+            print(f"Erro original: {repr(e)}")
