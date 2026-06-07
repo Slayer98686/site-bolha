@@ -291,31 +291,30 @@ if texto_usuario := st.chat_input(
             tentativas = 3
             sucesso = False
 
-            for i in range(tentativas):
-                try:
-                    resposta = (
-                        st.session_state.chat
-                        .send_message(texto_usuario)
-                    )
-                    
-                    st.write(resposta.text)
+        for i in range(tentativas):
+    try:
+        resposta = (
+            st.session_state.chat
+            .send_message(texto_usuario)
+        )
 
-                    # Se a API respondeu certo, salvamos o bloco completo no histórico
-                    st.session_state.historico.append({
-                        "autor": "user",
-                        "texto": texto_usuario,
-                        "avatar": "👤"
-                    })
-                    
-                    st.session_state.historico.append({
-                        "autor": "assistant",
-                        "texto": resposta.text,
-                        "avatar": "🫧"
-                    })
-                    
-                    sucesso = True
-                    break  # Mensagem enviada com sucesso, encerra o loop de tentativas
-                    
-          except Exception as e:
-    st.error(f"Erro real: {repr(e)}")
-    print(f"Erro original: {repr(e)}")
+        st.write(resposta.text)
+
+        st.session_state.historico.append({
+            "autor": "user",
+            "texto": texto_usuario,
+            "avatar": "👤"
+        })
+
+        st.session_state.historico.append({
+            "autor": "assistant",
+            "texto": resposta.text,
+            "avatar": "🫧"
+        })
+
+        sucesso = True
+        break
+
+    except Exception as e:
+        st.error(f"Erro real: {repr(e)}")
+        print(f"Erro original: {repr(e)}")
