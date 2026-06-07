@@ -271,53 +271,58 @@ if texto_usuario := st.chat_input(
     "Diga um oi para a Bolha..."
 ):
 
-    # Mostra a mensagem do usuário na tela imediatamente
+    # Mostra a mensagem do usuário
     with st.chat_message(
         "user",
         avatar="👤"
     ):
         st.write(texto_usuario)
 
-    # Cria o espaço do assistente e roda o mecanismo de proteção contra erro 503
+    # Resposta da Bolha
     with st.chat_message(
         "assistant",
         avatar="🫧"
     ):
 
-       with st.spinner(
-    "Bolha está digitando... 💭"
-):
+        with st.spinner(
+            "Bolha está digitando... 💭"
+        ):
 
-    tentativas = 3
-    sucesso = False
+            tentativas = 3
+            sucesso = False
 
-    for i in range(tentativas):
+            for i in range(tentativas):
 
-        try:
+                try:
 
-            resposta = (
-                st.session_state.chat
-                .send_message(texto_usuario)
-            )
+                    resposta = (
+                        st.session_state.chat
+                        .send_message(texto_usuario)
+                    )
 
-            st.write(resposta.text)
+                    st.write(resposta.text)
 
-            st.session_state.historico.append({
-                "autor": "user",
-                "texto": texto_usuario,
-                "avatar": "👤"
-            })
+                    st.session_state.historico.append({
+                        "autor": "user",
+                        "texto": texto_usuario,
+                        "avatar": "👤"
+                    })
 
-            st.session_state.historico.append({
-                "autor": "assistant",
-                "texto": resposta.text,
-                "avatar": "🫧"
-            })
+                    st.session_state.historico.append({
+                        "autor": "assistant",
+                        "texto": resposta.text,
+                        "avatar": "🫧"
+                    })
 
-            sucesso = True
-            break
+                    sucesso = True
+                    break
 
-        except Exception as e:
+                except Exception as e:
 
-            st.error(f"Erro real: {repr(e)}")
-            print(f"Erro original: {repr(e)}")
+                    st.error(
+                        f"Erro real: {repr(e)}"
+                    )
+
+                    print(
+                        f"Erro original: {repr(e)}"
+                    )
