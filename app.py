@@ -316,6 +316,6 @@ if texto_usuario := st.chat_input(
                     sucesso = True
                     break  # Mensagem enviada com sucesso, encerra o loop de tentativas
                     
-                except Exception as e:
-   			  	 st.error(f"Erro real: {repr(e)}")
-   				 print(f"Erro original: {repr(e)}")
+          except Exception as e:
+    st.error(f"Erro real: {repr(e)}")
+    print(f"Erro original: {repr(e)}")
