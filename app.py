@@ -317,13 +317,5 @@ if texto_usuario := st.chat_input(
                     break  # Mensagem enviada com sucesso, encerra o loop de tentativas
                     
                 except Exception as e:
-                    # Se for erro de indisponibilidade (503) e ainda houver tentativas restantes
-                    if "503" in str(e) and i < tentativas - 1:
-                        time.sleep(2)  # Aguarda 2 segundos antes de tentar novamente
-                        continue
-                    else:
-                        st.error(
-                            "Opa! Os servidores do Gemini estão bem instáveis agora. 😭 "
-                            "Tente enviar sua mensagem novamente em alguns segundos!"
-                        )
-                        print(f"Erro original: {e}")
+   			  	 st.error(f"Erro real: {repr(e)}")
+   				 print(f"Erro original: {repr(e)}")
